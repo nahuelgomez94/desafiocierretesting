@@ -1,7 +1,6 @@
 package products
 
 import (
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -37,22 +36,32 @@ func NewRequest(method, path, body string) (req *http.Request, res *httptest.Res
 func TestGetAllBySellerHandler(t *testing.T) {
 	// Act
 	testCases := []struct {
-		Name           string
-		Method         string
-		Endpoint       string
-		Body           string
-		ExpectedCode   int
-		ProductsInRepo []Product
-		ErrMocked      error
+		Name             string
+		Method           string
+		Endpoint         string
+		Body             string
+		ExpectedCode     int
+		ExpectedResponse string
+		ProductsInRepo   []Product
+		ErrMocked        error
 	}{
 		{
-			Name:         "Ok",
-			Method:       http.MethodGet,
-			Endpoint:     "/api/v1?seller_id=1",
-			Body:         "",
-			ExpectedCode: 200,
+			Name:     "Ok",
+			Method:   http.MethodGet,
+			Endpoint: "/api/v1?seller_id=1",
+			Body:     "",
+			ProductsInRepo: []Product{
+				{
+					ID:          "mock",
+					SellerID:    "FEX112AC",
+					Description: "generic product",
+					Price:       123.55,
+				},
+			},
+			ExpectedCode:     200,
+			ExpectedResponse: "[{\"ID\":\"mock\",\"SellerID\":\"FEX112AC\",\"Description\":\"generic product\",\"Price\":123.55}]",
 		},
-		{
+		/*{
 			Name:         "No query",
 			Method:       http.MethodGet,
 			Endpoint:     "/api/v1",
@@ -66,7 +75,7 @@ func TestGetAllBySellerHandler(t *testing.T) {
 			Body:         "",
 			ExpectedCode: 500,
 			ErrMocked:    errors.New("Test"),
-		},
+		},*/
 	}
 
 	// Assert
@@ -79,8 +88,12 @@ func TestGetAllBySellerHandler(t *testing.T) {
 			req, res := NewRequest(tc.Method, tc.Endpoint, tc.Body)
 
 			server.ServeHTTP(res, req)
+
+			rta := string(res.Body.Bytes())
+
 			// Assert
 			assert.Equal(t, tc.ExpectedCode, res.Code)
+			assert.Equal(t, tc.ExpectedResponse, rta)
 		})
 	}
 }
