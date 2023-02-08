@@ -1,6 +1,7 @@
 package products
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -14,7 +15,7 @@ func CreateServerProducts(pr Repository) *gin.Engine {
 	service := NewService(pr)
 	handler := NewHandler(service)
 
-	server := gin.Default()
+	server := gin.New()
 
 	rg := server.Group("/api/v1")
 	{
@@ -61,21 +62,25 @@ func TestGetAllBySellerHandler(t *testing.T) {
 			ExpectedCode:     200,
 			ExpectedResponse: "[{\"ID\":\"mock\",\"SellerID\":\"FEX112AC\",\"Description\":\"generic product\",\"Price\":123.55}]",
 		},
-		/*{
-			Name:         "No query",
-			Method:       http.MethodGet,
-			Endpoint:     "/api/v1",
-			Body:         "",
-			ExpectedCode: 400,
+		{
+			Name:             "No query",
+			Method:           http.MethodGet,
+			Endpoint:         "/api/v1",
+			Body:             "",
+			ExpectedCode:     400,
+			ExpectedResponse: "{\"error\":\"seller_id query param is required\"}",
+			ProductsInRepo:   []Product{},
 		},
 		{
-			Name:         "Internal Error",
-			Method:       http.MethodGet,
-			Endpoint:     "/api/v1?seller_id=error",
-			Body:         "",
-			ExpectedCode: 500,
-			ErrMocked:    errors.New("Test"),
-		},*/
+			Name:             "Internal Error",
+			Method:           http.MethodGet,
+			Endpoint:         "/api/v1?seller_id=error",
+			Body:             "",
+			ExpectedCode:     500,
+			ExpectedResponse: "{\"error\":\"Test\"}",
+			ErrMocked:        errors.New("Test"),
+			ProductsInRepo:   []Product{},
+		},
 	}
 
 	// Assert
